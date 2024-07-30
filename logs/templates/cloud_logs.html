@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Cloud Logs</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Cloud File Activity Logs</h1>
+        <table class="table table-striped table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Activity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr{% if log.is_deleted %} class="table-danger"{% endif %}>
+                    <td>{{ log.timestamp }}</td>
+                    <td>
+                        {{ log.activity }} - <strong>{{ log.file_name }}</strong>
+                        {% if log.is_deleted %}
+                            <span class="text-danger">(Deleted)</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{% url 'home' %}" class="btn btn-primary mt-3">Back to Dashboard</a>
+    </div>
+</body>
+</html>

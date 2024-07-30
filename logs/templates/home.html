@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <title>Network Dashboard</title>
+</head>
+<body>
+    <div class="container-fluid">
+        <header class="bg-primary text-white text-center py-4">
+            <h1>Network & Cloud Dashboard</h1>
+        </header>
+        
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        NIDS Logs
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            {% for log in recent_nids_logs %}
+                            <li class="list-group-item">
+                                <strong>{{ log.logged_at|date:"Y-m-d H:i:s" }}</strong>: {{ log.message }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <a href="{% url 'nids_logs' %}" class="btn btn-primary mt-2">View All NIDS Logs</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        Cloud File Activity
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            {% for log in recent_cloud_logs %}
+                            <li class="list-group-item">
+                                <strong>{{ log.timestamp|date:"Y-m-d H:i:s" }}</strong>: {{ log.activity }} - <strong>{{ log.file_name }}</strong>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <a href="{% url 'cloud_logs' %}" class="btn btn-primary mt-2">View All Cloud Logs</a>
+                        <a href="{% url 'cloud_functionality' %}" class="btn btn-secondary mt-2">Manage Cloud Files</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        System Overview
+                    </div>
+                    <div class="card-body">
+                        <h5>Statistics</h5>
+                        <canvas id="myChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="bg-light text-center py-4">
+            <p>&copy; {{ year }} Network Security Team</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ nids_log_dates|safe }},
+                datasets: [{
+                    label: 'Intrusion Attempts',
+                    data: {{ nids_log_counts|safe }},
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

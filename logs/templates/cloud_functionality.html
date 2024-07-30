@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Cloud File Management</title>
+    <script>
+        function confirmDelete() {
+            return confirm("Are you sure you want to delete this file?");
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Cloud File Management</h1>
+        
+        <!-- File Upload Form -->
+        <form action="{% url 'upload_file' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="file">Upload a file:</label>
+                <input type="file" class="form-control" id="file" name="file" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+        
+        <!-- File List Table -->
+        <table class="table mt-5">
+            <thead>
+                <tr>
+                    <th>Filename</th>
+                    <th>Timestamp</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in cloud_logs %}
+                <tr>
+                    <td>{{ log.file_name }}</td>
+                    <td>{{ log.timestamp }}</td>  <!-- Update this line -->
+                    <td>
+                        <a href="{% url 'download_file' log.id %}" class="btn btn-success btn-sm">Download</a>
+                        <form action="{% url 'delete_file' log.id %}" method="post" class="d-inline" onsubmit="return confirmDelete();">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="{% url 'home' %}" class="btn btn-primary mt-3">Back to Dashboard</a>
+    </div>
+</body>
+</html>
