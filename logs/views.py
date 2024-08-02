@@ -8,31 +8,28 @@ from django.conf import settings
 from django.http import HttpResponse
 import os
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.hazmat.backends import default_backend
-from base64 import urlsafe_b64encode, urlsafe_b64decode
-from cryptography.hazmat.primitives import constant_time
 
-# Define your encryption key and salt
-ENCRYPTION_KEY = b'your_32_byte_encryption_key_here'
-SALT = b'your_salt_here'
+# Load your encryption key and salt from files
+def load_key_and_salt():
+    key_path = os.path.join(settings.BASE_DIR, 'encryption_key.key')
+    salt_path = os.path.join(settings.BASE_DIR, 'salt.salt')
 
-# Utility function to derive a key from the password
-def derive_key(password: bytes, salt: bytes) -> bytes:
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt,
-        iterations=100000,
-        backend=default_backend()
-    )
-    return kdf.derive(password)
+    if not os.path.exists(key_path) or not os.path.exists(salt_path):
+        raise FileNotFoundError("Key or salt file not found.")
+
+    with open(key_path, 'rb') as key_file:
+        key = key_file.read()
+    with open(salt_path, 'rb') as salt_file:
+        salt = salt_file.read()
+    return key, salt
+
+ENCRYPTION_KEY, SALT = load_key_and_salt()
 
 def encrypt_file(input_file_path, output_file_path):
     backend = default_backend()
-    iv = os.urandom(16)
+    iv = os.urandom(16)  # Generate a random IV
     cipher = Cipher(algorithms.AES(ENCRYPTION_KEY), modes.CBC(iv), backend=backend)
     encryptor = cipher.encryptor()
     padder = PKCS7(128).padder()
@@ -50,7 +47,7 @@ def decrypt_file(input_file_path, output_file_path):
     backend = default_backend()
 
     with open(input_file_path, 'rb') as f:
-        iv = f.read(16)
+        iv = f.read(16)  # Extract the IV from the beginning
         ciphertext = f.read()
 
     cipher = Cipher(algorithms.AES(ENCRYPTION_KEY), modes.CBC(iv), backend=backend)
@@ -91,7 +88,7 @@ def cloud_logs_view(request):
     return render(request, 'cloud_logs.html', {'logs': logs})
 
 def upload_file(request):
-    if request.method == 'POST' and request.FILES['file']:
+    if request.method == 'POST' and request.FILES.get('file'):
         uploaded_file = request.FILES['file']
         fs = FileSystemStorage()
         filename = fs.save(uploaded_file.name, uploaded_file)
